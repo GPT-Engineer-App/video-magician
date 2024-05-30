@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Container, VStack, HStack, Button, Box, Text, Slider, SliderTrack, SliderFilledTrack, SliderThumb, IconButton } from "@chakra-ui/react";
-import { FaPlay, FaPause, FaStop, FaUpload } from "react-icons/fa";
+import { Container, VStack, HStack, Button, Box, Text, Slider, SliderTrack, SliderFilledTrack, SliderThumb, IconButton, useToast } from "@chakra-ui/react";
+import { FaPlay, FaPause, FaStop, FaUpload, FaClosedCaptioning } from "react-icons/fa";
 
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [subtitles, setSubtitles] = useState([]);
   const [videoFile, setVideoFile] = useState(null);
   const [videoDuration, setVideoDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -50,12 +51,30 @@ const Index = () => {
     setCurrentTime(value);
   };
 
+  const generateSubtitles = () => {
+    const videoElement = document.getElementById("video-player");
+    const duration = videoElement.duration;
+    const generatedSubtitles = [
+      { start: 0, end: duration / 2, text: "This is a generated subtitle for the first half." },
+      { start: duration / 2, end: duration, text: "This is a generated subtitle for the second half." },
+    ];
+    setSubtitles(generatedSubtitles);
+  };
+
+  const getSubtitleForCurrentTime = () => {
+    const currentTime = document.getElementById("video-player").currentTime;
+    const currentSubtitle = subtitles.find((sub) => currentTime >= sub.start && currentTime <= sub.end);
+    return currentSubtitle ? currentSubtitle.text : "";
+  };
   return (
     <Container centerContent maxW="container.md" height="100vh" display="flex" flexDirection="column" justifyContent="center" alignItems="center">
       <VStack spacing={4} width="100%">
         <input type="file" accept="video/*" onChange={handleUpload} style={{ display: "none" }} id="upload-input" />
         <Button as="label" htmlFor="upload-input" leftIcon={<FaUpload />}>
           Upload Video
+        </Button>
+        <Button leftIcon={<FaClosedCaptioning />} onClick={generateSubtitles}>
+          Generate Subtitles
         </Button>
         {videoFile && (
           <Box width="100%">
@@ -70,15 +89,8 @@ const Index = () => {
               </SliderTrack>
               <SliderThumb />
             </Slider>
-            <Text mt={2}>
-              {Math.floor(currentTime / 60)}:
-              {Math.floor(currentTime % 60)
-                .toString()
-                .padStart(2, "0")}{" "}
-              / {Math.floor(videoDuration / 60)}:
-              {Math.floor(videoDuration % 60)
-                .toString()
-                .padStart(2, "0")}
+            <Text mt={2} color="gray.500">
+              {getSubtitleForCurrentTime()}
             </Text>
           </Box>
         )}
